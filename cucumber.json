@@ -1,0 +1,7 @@
+{
+  "default": {
+    "paths": ["tests/features/**/*.feature"],
+    "require": ["tests/step-definitions/**/*.steps.js", "tests/step-definitions/**/*.steps.cjs"],
+    "publishQuiet": true
+  }
+}
