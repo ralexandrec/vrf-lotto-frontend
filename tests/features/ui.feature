@@ -33,3 +33,15 @@ Feature: Interface do usuário do Lotchain
     Given que eu configuro o idioma do navegador para "pt-BR"
     And que eu acesso a página inicial do Lotchain
     Then o título dos logs "ATIVIDADES EM TEMPO REAL" deve ser visível na página
+
+  Scenario: Validar layout responsivo do cabeçalho e do configurador de contrato no desktop
+    Given que eu configuro a tela para "desktop"
+    And que eu acesso a página inicial do Lotchain
+    Then a logo e os controles do header devem estar na mesma linha
+    And o input de contrato e o botão de carregar devem estar na mesma linha
+
+  Scenario: Validar layout responsivo do cabeçalho e do configurador de contrato no celular
+    Given que eu configuro a tela para "celular"
+    And que eu acesso a página inicial do Lotchain
+    Then a logo e os controles do header devem estar em linhas separadas
+    And o input de contrato e o botão de carregar devem estar em linhas separadas

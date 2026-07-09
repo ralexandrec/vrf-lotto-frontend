@@ -1,23 +1,14 @@
 const { Given, When, Then, Before, After } = require("@cucumber/cucumber");
-const { chromium } = require("playwright");
+const { chromium, devices } = require("playwright");
 const { expect } = require("chai");
 
 let browser;
 let context;
 let page;
 
-Before(async () => {
-  browser = await chromium.launch({ headless: true });
-  context = await browser.newContext({ locale: "en-US" });
-  page = await context.newPage();
-  
-  // Forward page console logs to terminal
-  page.on("console", msg => {
-    console.log(`[PAGE LOG]: ${msg.text()}`);
-  });
-
+const setupMocks = async (targetPage) => {
   // Injetar Mock do window.ethereum antes de cada carregamento de página
-  await page.addInitScript(() => {
+  await targetPage.addInitScript(() => {
     Object.defineProperty(navigator, 'language', { get: () => 'en-US', configurable: true });
     Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'], configurable: true });
 
@@ -54,7 +45,7 @@ Before(async () => {
             hash: "0x0000000000000000000000000000000000000000000000000000000000000001",
             parentHash: "0x0000000000000000000000000000000000000000000000000000000000000000",
             sha3Uncles: "0x1dcc4de8dec75d7aab85b1b56fc1745a819024c2ed2137bc77a6f4577a911685",
-            logsBloom: "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            logsBloom: "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
             transactionsRoot: "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
             stateRoot: "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
             receiptsRoot: "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
@@ -257,10 +248,39 @@ Before(async () => {
       }
     };
   });
+};
+
+Before(async () => {
+  browser = await chromium.launch({ headless: true });
+  context = await browser.newContext({ locale: "en-US" });
+  page = await context.newPage();
+  await setupMocks(page);
 });
 
 After(async () => {
   await browser.close();
+});
+
+Given("que eu configuro a tela para {string}", async (deviceType) => {
+  await page.close();
+  await context.close();
+  
+  const isMobile = deviceType === "celular" || deviceType === "mobile";
+  if (isMobile) {
+    const mobileDevice = devices["iPhone 12"];
+    context = await browser.newContext({
+      ...mobileDevice,
+      locale: "en-US"
+    });
+  } else {
+    context = await browser.newContext({
+      viewport: { width: 1280, height: 800 },
+      locale: "en-US"
+    });
+  }
+  
+  page = await context.newPage();
+  await setupMocks(page);
 });
 
 Given("que eu configuro o idioma do navegador para {string}", async (targetLocale) => {
@@ -385,4 +405,64 @@ Then("as atividades históricas reais do contrato devem estar carregadas na tela
 Then("o título dos logs {string} deve ser visível na página", async (expectedTitle) => {
   const logsTitleText = await page.locator(".log-header h2").textContent();
   expect(logsTitleText).to.include(expectedTitle);
+});
+
+Then("a logo e os controles do header devem estar na mesma linha", async () => {
+  const logoBox = await page.locator(".logo-container").boundingBox();
+  const controlsBox = await page.locator(".header-controls").boundingBox();
+  const viewport = page.viewportSize();
+  
+  // Mesma linha horizontal (diferença no topo Y menor que 15px)
+  expect(Math.abs(logoBox.y - controlsBox.y)).to.be.lessThan(15);
+  
+  // Ambos os elementos devem estar contidos na largura total da tela (sem transbordo)
+  expect(logoBox.x).to.be.greaterThanOrEqual(0);
+  expect(logoBox.x + logoBox.width).to.be.lessThanOrEqual(viewport.width);
+  expect(controlsBox.x).to.be.greaterThanOrEqual(0);
+  expect(controlsBox.x + controlsBox.width).to.be.lessThanOrEqual(viewport.width);
+});
+
+Then("o input de contrato e o botão de carregar devem estar na mesma linha", async () => {
+  const inputBox = await page.locator(".input-text").boundingBox();
+  const buttonBox = await page.locator(".input-group button").boundingBox();
+  const viewport = page.viewportSize();
+  
+  // Mesma linha horizontal
+  expect(Math.abs(inputBox.y - buttonBox.y)).to.be.lessThan(10);
+  
+  // Sem transbordo lateral
+  expect(inputBox.x).to.be.greaterThanOrEqual(0);
+  expect(inputBox.x + inputBox.width).to.be.lessThanOrEqual(viewport.width);
+  expect(buttonBox.x).to.be.greaterThanOrEqual(0);
+  expect(buttonBox.x + buttonBox.width).to.be.lessThanOrEqual(viewport.width);
+});
+
+Then("a logo e os controles do header devem estar em linhas separadas", async () => {
+  const logoBox = await page.locator(".logo-container").boundingBox();
+  const controlsBox = await page.locator(".header-controls").boundingBox();
+  const viewport = page.viewportSize();
+  
+  // Linhas separadas (o topo do controle Y deve estar bem abaixo do fim da logo)
+  expect(controlsBox.y).to.be.greaterThan(logoBox.y + logoBox.height - 2);
+  
+  // Sem transbordo lateral no celular
+  expect(logoBox.x).to.be.greaterThanOrEqual(0);
+  expect(logoBox.x + logoBox.width).to.be.lessThanOrEqual(viewport.width);
+  expect(controlsBox.x).to.be.greaterThanOrEqual(0);
+  expect(controlsBox.x + controlsBox.width).to.be.lessThanOrEqual(viewport.width);
+});
+
+Then("o input de contrato e o botão de carregar devem estar em linhas separadas", async () => {
+  const inputBox = await page.locator(".input-text").boundingBox();
+  const buttonBox = await page.locator(".input-group button").boundingBox();
+  const viewport = page.viewportSize();
+  
+  // Linhas separadas (o topo do botão Y deve estar abaixo do fim do input)
+  expect(buttonBox.y).to.be.greaterThan(inputBox.y + inputBox.height - 2);
+  
+  // Sem transbordo lateral no celular (a largura do input deve respeitar o limite da tela)
+  expect(inputBox.x).to.be.greaterThanOrEqual(0);
+  expect(inputBox.x + inputBox.width).to.be.lessThanOrEqual(viewport.width);
+  expect(buttonBox.x).to.be.greaterThanOrEqual(0);
+  expect(buttonBox.x + buttonBox.width).to.be.lessThanOrEqual(viewport.width);
 });
