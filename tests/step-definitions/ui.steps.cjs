@@ -44,6 +44,30 @@ Before(async () => {
           return "0x29de000"; // Bloco real aproximado correspondente ao dump (43900928)
         }
 
+        if (method === "eth_getBlockByNumber") {
+          const blockHex = params ? params[0] : "0x29de000";
+          return {
+            number: blockHex,
+            hash: "0x0000000000000000000000000000000000000000000000000000000000000001",
+            parentHash: "0x0000000000000000000000000000000000000000000000000000000000000000",
+            sha3Uncles: "0x1dcc4de8dec75d7aab85b1b56fc1745a819024c2ed2137bc77a6f4577a911685",
+            logsBloom: "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            transactionsRoot: "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            stateRoot: "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            receiptsRoot: "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            miner: "0x0000000000000000000000000000000000000000",
+            difficulty: "0x0",
+            totalDifficulty: "0x0",
+            extraData: "0x",
+            size: "0x0",
+            gasLimit: "0x0",
+            gasUsed: "0x0",
+            timestamp: "0x66668700", // Corresponde a 10 de Junho de 2024 (1718000000)
+            transactions: [],
+            uncles: []
+          };
+        }
+
         if (method === "eth_getLogs") {
           const filter = params ? params[0] : null;
           const filterTopics = filter?.topics || [];
@@ -335,13 +359,18 @@ Then("a aba {string} deve estar ativa", async (tabName) => {
 });
 
 Then("as atividades históricas reais do contrato devem estar carregadas na tela", async () => {
-  // Aguarda processamento assíncrono das queries de loteamento paralelo
-  await page.waitForTimeout(1000);
+  // Aguarda processamento assíncrono das queries de loteamento paralelo e getBlock
+  await page.waitForTimeout(1500);
 
   const logsContainer = page.locator(".logs-container");
   const logContent = await logsContainer.textContent();
   
   expect(logContent.toLowerCase()).to.include("0xeb12...2846");
   expect(logContent.toLowerCase()).to.include("0xc545...8b41");
-  expect(logContent).to.include("~");
+  
+  // Como o timestamp mockado é antigo (10 de Junho de 2024), deve conter o formato de dia/mês "10/06"
+  expect(logContent).to.include("10/06");
+  
+  // Garante que o prefixo ~ do Plano B foi totalmente removido
+  expect(logContent).to.not.include("~");
 });

@@ -366,27 +366,6 @@ function App() {
     }
   };
 
-  const formatEstimatedTime = (blockNumber, latestBlock) => {
-    const blockDiff = latestBlock - blockNumber;
-    const estimatedTimestamp = Date.now() - (blockDiff * 2000);
-    const eventDate = new Date(estimatedTimestamp);
-    const today = new Date();
-    
-    const isToday = eventDate.getDate() === today.getDate() &&
-                    eventDate.getMonth() === today.getMonth() &&
-                    eventDate.getFullYear() === today.getFullYear();
-                    
-    if (isToday) {
-      return `~${eventDate.toLocaleTimeString()}`;
-    } else {
-      const day = String(eventDate.getDate()).padStart(2, '0');
-      const month = String(eventDate.getMonth() + 1).padStart(2, '0');
-      const hours = String(eventDate.getHours()).padStart(2, '0');
-      const minutes = String(eventDate.getMinutes()).padStart(2, '0');
-      return `~${day}/${month} ${hours}:${minutes}`;
-    }
-  };
-
   const loadHistoricalEvents = async (contract, provider) => {
     try {
       const latestBlock = await provider.getBlockNumber();
@@ -424,7 +403,6 @@ function App() {
         const jogador = e.args[0];
         return {
           id: `${e.transactionHash}-buy`,
-          time: formatEstimatedTime(Number(e.blockNumber), latestBlock),
           text: t("log.event.ticketBought", { address: `${jogador.substring(0, 6)}...${jogador.substring(38)}` }),
           type: "highlight",
           meta: { address: jogador, txHash: e.transactionHash },
@@ -442,7 +420,6 @@ function App() {
         return [
           {
             id: `${e.transactionHash}-winner`,
-            time: formatEstimatedTime(Number(e.blockNumber), latestBlock),
             text: t("log.event.winnerDrawn", { winner: `${vencedor.substring(0, 6)}...${vencedor.substring(38)}` }),
             type: "success",
             meta: { address: vencedor, txHash: e.transactionHash },
@@ -451,7 +428,6 @@ function App() {
           },
           {
             id: `${e.transactionHash}-prize`,
-            time: formatEstimatedTime(Number(e.blockNumber), latestBlock),
             text: t("log.event.winnerPrize", { prize: premio }),
             type: "success",
             meta: { address: vencedor, txHash: e.transactionHash },
@@ -461,12 +437,61 @@ function App() {
         ];
       }).flat();
 
-      const sortedHistoricalLogs = [...parsedTicketLogs, ...parsedWinnerLogs].sort((a, b) => b.blockNumber - a.blockNumber);
+      // 1. Ordena todos os logs históricos por bloco decrescente (mais recentes primeiro)
+      const sortedAllLogs = [...parsedTicketLogs, ...parsedWinnerLogs].sort((a, b) => b.blockNumber - a.blockNumber);
+
+      // 2. Fatia para conter no máximo as 15 atividades mais recentes (otimização de tráfego)
+      const slicedHistoricalLogs = sortedAllLogs.slice(0, 15);
+
+      // 3. Coleta os blocos únicos contidos nessas 15 atividades
+      const uniqueBlocks = [...new Set(slicedHistoricalLogs.map(l => l.blockNumber))];
+
+      // 4. Busca os timestamps reais dos blocos únicos em paralelo
+      const blockCache = {};
+      await Promise.all(uniqueBlocks.map(async (num) => {
+        try {
+          const block = await provider.getBlock(num);
+          if (block) {
+            blockCache[num] = block.timestamp * 1000; // Milissegundos UNIX
+          }
+        } catch (e) {
+          console.error(`Failed to fetch block timestamp for block ${num}:`, e);
+        }
+      }));
+
+      // Helper para formatar a data real exata
+      const formatBlockTime = (timestamp) => {
+        const eventDate = new Date(timestamp);
+        const today = new Date();
+        
+        const isToday = eventDate.getDate() === today.getDate() &&
+                        eventDate.getMonth() === today.getMonth() &&
+                        eventDate.getFullYear() === today.getFullYear();
+                        
+        if (isToday) {
+          return eventDate.toLocaleTimeString(); // Retorna "HH:MM:SS"
+        } else {
+          const day = String(eventDate.getDate()).padStart(2, '0');
+          const month = String(eventDate.getMonth() + 1).padStart(2, '0');
+          const hours = String(eventDate.getHours()).padStart(2, '0');
+          const minutes = String(eventDate.getMinutes()).padStart(2, '0');
+          return `${day}/${month} ${hours}:${minutes}`; // Retorna "DD/MM HH:MM"
+        }
+      };
+
+      // 5. Popula a propriedade time de cada log com a data exata vinda do cache de blocos
+      const finalHistoricalLogs = slicedHistoricalLogs.map(log => {
+        const ts = blockCache[log.blockNumber];
+        return {
+          ...log,
+          time: ts ? formatBlockTime(ts) : "---"
+        };
+      });
 
       setLogs((prevLogs) => {
         // Preserva logs locais de UI (Minhas Ações) que não são eventos blockchain
         const uiLogs = prevLogs.filter(l => l.scope === "user" && !l.meta?.txHash);
-        const combined = [...uiLogs, ...sortedHistoricalLogs];
+        const combined = [...uiLogs, ...finalHistoricalLogs];
         const unique = combined.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
         return unique.slice(0, 50);
       });
