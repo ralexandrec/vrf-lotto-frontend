@@ -25,6 +25,7 @@ export const translations = {
     "log.status.connected": "Carteira conectada: {address}",
     "log.status.contractLoaded": "Contrato carregado com sucesso!",
     "log.status.contractError": "Erro ao carregar contrato. Verifique o endereço.",
+    "log.blockTooltip": "Bloco #{number}",
     
     // Wizard
     "wizard.title": "ASSISTENTE DE APOSTA",
@@ -98,6 +99,7 @@ export const translations = {
     "log.status.connected": "Wallet connected: {address}",
     "log.status.contractLoaded": "Contract loaded successfully!",
     "log.status.contractError": "Error loading contract. Verify the address.",
+    "log.blockTooltip": "Block #{number}",
 
     // Wizard
     "wizard.title": "BETTING WIZARD",

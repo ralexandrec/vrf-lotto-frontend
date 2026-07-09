@@ -366,6 +366,27 @@ function App() {
     }
   };
 
+  const formatEstimatedTime = (blockNumber, latestBlock) => {
+    const blockDiff = latestBlock - blockNumber;
+    const estimatedTimestamp = Date.now() - (blockDiff * 2000);
+    const eventDate = new Date(estimatedTimestamp);
+    const today = new Date();
+    
+    const isToday = eventDate.getDate() === today.getDate() &&
+                    eventDate.getMonth() === today.getMonth() &&
+                    eventDate.getFullYear() === today.getFullYear();
+                    
+    if (isToday) {
+      return `~${eventDate.toLocaleTimeString()}`;
+    } else {
+      const day = String(eventDate.getDate()).padStart(2, '0');
+      const month = String(eventDate.getMonth() + 1).padStart(2, '0');
+      const hours = String(eventDate.getHours()).padStart(2, '0');
+      const minutes = String(eventDate.getMinutes()).padStart(2, '0');
+      return `~${day}/${month} ${hours}:${minutes}`;
+    }
+  };
+
   const loadHistoricalEvents = async (contract, provider) => {
     try {
       const latestBlock = await provider.getBlockNumber();
@@ -403,12 +424,12 @@ function App() {
         const jogador = e.args[0];
         return {
           id: `${e.transactionHash}-buy`,
-          time: `Bloco #${e.blockNumber}`,
+          time: formatEstimatedTime(Number(e.blockNumber), latestBlock),
           text: t("log.event.ticketBought", { address: `${jogador.substring(0, 6)}...${jogador.substring(38)}` }),
           type: "highlight",
           meta: { address: jogador, txHash: e.transactionHash },
           scope: jogador.toLowerCase() === (userAddress || "").toLowerCase() ? "both" : "global",
-          blockNumber: e.blockNumber
+          blockNumber: Number(e.blockNumber)
         };
       });
 
@@ -421,21 +442,21 @@ function App() {
         return [
           {
             id: `${e.transactionHash}-winner`,
-            time: `Bloco #${e.blockNumber}`,
+            time: formatEstimatedTime(Number(e.blockNumber), latestBlock),
             text: t("log.event.winnerDrawn", { winner: `${vencedor.substring(0, 6)}...${vencedor.substring(38)}` }),
             type: "success",
             meta: { address: vencedor, txHash: e.transactionHash },
             scope: scope,
-            blockNumber: e.blockNumber
+            blockNumber: Number(e.blockNumber)
           },
           {
             id: `${e.transactionHash}-prize`,
-            time: `Bloco #${e.blockNumber}`,
+            time: formatEstimatedTime(Number(e.blockNumber), latestBlock),
             text: t("log.event.winnerPrize", { prize: premio }),
             type: "success",
             meta: { address: vencedor, txHash: e.transactionHash },
             scope: scope,
-            blockNumber: e.blockNumber
+            blockNumber: Number(e.blockNumber)
           }
         ];
       }).flat();
@@ -802,7 +823,13 @@ function App() {
             })
             .map((log) => (
               <div key={log.id} className="log-entry">
-                <span className="log-time">[{log.time}]</span>
+                <span 
+                  className="log-time"
+                  title={log.blockNumber ? t("log.blockTooltip", { number: log.blockNumber }) : undefined}
+                  style={log.blockNumber ? { cursor: "help" } : undefined}
+                >
+                  [{log.time}]
+                </span>
                 <span className={`log-text ${log.type}`}>{renderLogText(log)}</span>
               </div>
             ))}

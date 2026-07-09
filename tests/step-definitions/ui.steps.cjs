@@ -343,4 +343,5 @@ Then("as atividades históricas reais do contrato devem estar carregadas na tela
   
   expect(logContent.toLowerCase()).to.include("0xeb12...2846");
   expect(logContent.toLowerCase()).to.include("0xc545...8b41");
+  expect(logContent).to.include("~");
 });
