@@ -369,16 +369,35 @@ function App() {
   const loadHistoricalEvents = async (contract, provider) => {
     try {
       const latestBlock = await provider.getBlockNumber();
-      // Limite de 10.000 blocos (~5.5 horas de histórico a 2s/bloco)
-      const fromBlock = Math.max(0, latestBlock - 10000);
+      
+      // Contorna limite rígido de range (ex: 2.000 blocos max por chamada RPC no nó gratuito da Base Sepolia)
+      const batchSize = 2000;
+      const totalBlocksToQuery = 20000; // Cobre os últimos 20.000 blocos (~11 horas)
 
       const filterTicket = contract.filters.BilheteComprado();
       const filterWinner = contract.filters.VencedorSorteado();
 
-      const [ticketEvents, winnerEvents] = await Promise.all([
-        contract.queryFilter(filterTicket, fromBlock),
-        contract.queryFilter(filterWinner, fromBlock)
+      const queriesTicket = [];
+      const queriesWinner = [];
+
+      for (let i = 0; i < totalBlocksToQuery; i += batchSize) {
+        const toBlock = latestBlock - i;
+        if (toBlock < 0) break;
+
+        const fromBlock = Math.max(0, toBlock - batchSize + 1);
+        queriesTicket.push(contract.queryFilter(filterTicket, fromBlock, toBlock));
+        queriesWinner.push(contract.queryFilter(filterWinner, fromBlock, toBlock));
+
+        if (fromBlock === 0) break;
+      }
+
+      const [resultsTicket, resultsWinner] = await Promise.all([
+        Promise.all(queriesTicket),
+        Promise.all(queriesWinner)
       ]);
+
+      const ticketEvents = resultsTicket.flat();
+      const winnerEvents = resultsWinner.flat();
 
       const parsedTicketLogs = ticketEvents.map(e => {
         const jogador = e.args[0];
