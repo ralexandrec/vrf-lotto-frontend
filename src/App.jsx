@@ -54,12 +54,79 @@ function App() {
   const t = (key, params = {}) => translate(key, lang, params);
 
   // Adiciona logs no console visual
-  const addLog = (text, type = "default") => {
+  const addLog = (text, type = "default", meta = {}) => {
     const timestamp = new Date().toLocaleTimeString();
     setLogs((prevLogs) => [
-      { id: Date.now() + Math.random(), time: timestamp, text, type },
+      { id: Date.now() + Math.random(), time: timestamp, text, type, meta },
       ...prevLogs.slice(0, 49), // Limita a 50 itens
     ]);
+  };
+
+  const getExplorerUrl = (addressOrTx, type = "address") => {
+    const isMainnet = chainId === BASE_MAINNET_CHAIN_ID;
+    const baseDomain = isMainnet ? "https://basescan.org" : "https://sepolia.basescan.org";
+    return `${baseDomain}/${type}/${addressOrTx}`;
+  };
+
+  const renderLogText = (log) => {
+    const addressRegex = /0x[a-fA-F0-9]{4}\.\.\.[a-fA-F0-9]{4}/gi;
+    const txRegex = /0x[a-fA-F0-9]{10}\.\.\./gi;
+    const fullAddressRegex = /0x[a-fA-F0-9]{40}/gi;
+    let text = log.text;
+
+    if (log.meta && log.meta.address) {
+      const parts = text.split(addressRegex);
+      if (parts.length > 1) {
+        const matches = text.match(addressRegex);
+        const abbrAddress = matches ? matches[0] : "";
+        const explorerUrl = getExplorerUrl(log.meta.address, "address");
+        return (
+          <>
+            {parts[0]}
+            <a href={explorerUrl} target="_blank" rel="noopener noreferrer" className="log-link">
+              {abbrAddress}
+            </a>
+            {parts[1]}
+          </>
+        );
+      }
+    }
+
+    if (log.meta && log.meta.txHash) {
+      const parts = text.split(txRegex);
+      if (parts.length > 1) {
+        const matches = text.match(txRegex);
+        const abbrTx = matches ? matches[0] : "";
+        const explorerUrl = getExplorerUrl(log.meta.txHash, "tx");
+        return (
+          <>
+            {parts[0]}
+            <a href={explorerUrl} target="_blank" rel="noopener noreferrer" className="log-link">
+              {abbrTx}
+            </a>
+            {parts[1]}
+          </>
+        );
+      }
+    }
+
+    const fullAddressMatch = text.match(fullAddressRegex);
+    if (fullAddressMatch) {
+      const addr = fullAddressMatch[0];
+      const parts = text.split(fullAddressRegex);
+      const explorerUrl = getExplorerUrl(addr, "address");
+      return (
+        <>
+          {parts[0]}
+          <a href={explorerUrl} target="_blank" rel="noopener noreferrer" className="log-link">
+            {`${addr.substring(0, 6)}...${addr.substring(38)}`}
+          </a>
+          {parts[1]}
+        </>
+      );
+    }
+
+    return text;
   };
 
   useEffect(() => {
@@ -302,7 +369,7 @@ function App() {
     contractRef.current = contract;
 
     contract.on("BilheteComprado", (jogador) => {
-      addLog(t("log.event.ticketBought", { address: `${jogador.substring(0, 6)}...${jogador.substring(38)}` }), "highlight");
+      addLog(t("log.event.ticketBought", { address: `${jogador.substring(0, 6)}...${jogador.substring(38)}` }), "highlight", { address: jogador });
       loadContractData();
     });
 
@@ -313,7 +380,7 @@ function App() {
 
     contract.on("VencedorSorteado", (vencedor, premio) => {
       const formattedPrize = ethers.formatEther(premio);
-      addLog(t("log.event.winnerDrawn", { winner: `${vencedor.substring(0, 6)}...${vencedor.substring(38)}` }), "success");
+      addLog(t("log.event.winnerDrawn", { winner: `${vencedor.substring(0, 6)}...${vencedor.substring(38)}` }), "success", { address: vencedor });
       addLog(t("log.event.winnerPrize", { prize: formattedPrize }), "success");
       
       // Abre modal se for o vencedor conectado
@@ -348,7 +415,7 @@ function App() {
       const valueToSend = ethers.parseEther(ticketPrice);
       const tx = await contract.comprarBilhete({ value: valueToSend });
       
-      addLog(`Transação enviada: ${tx.hash.substring(0, 10)}... Aguardando confirmação...`, "default");
+      addLog(`Transação enviada: ${tx.hash.substring(0, 10)}... Aguardando confirmação...`, "default", { txHash: tx.hash });
       await tx.wait();
 
       addLog(t("log.tx.success"), "success");
@@ -376,7 +443,7 @@ function App() {
       const contract = new ethers.Contract(contractAddress, LoteriaApostasABI.abi, signer);
 
       const tx = await contract.sortearVencedor();
-      addLog(`Transação de sorteio enviada: ${tx.hash.substring(0, 10)}... Aguardando confirmação...`, "default");
+      addLog(`Transação de sorteio enviada: ${tx.hash.substring(0, 10)}... Aguardando confirmação...`, "default", { txHash: tx.hash });
       await tx.wait();
 
       addLog(t("log.tx.drawSuccess"), "success");
@@ -591,7 +658,7 @@ function App() {
           {logs.map((log) => (
             <div key={log.id} className="log-entry">
               <span className="log-time">[{log.time}]</span>
-              <span className={`log-text ${log.type}`}>{log.text}</span>
+              <span className={`log-text ${log.type}`}>{renderLogText(log)}</span>
             </div>
           ))}
         </div>

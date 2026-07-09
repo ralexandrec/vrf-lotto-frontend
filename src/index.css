@@ -542,6 +542,18 @@ p {
   color: var(--accent-red);
 }
 
+.log-link {
+  color: var(--gold-secondary);
+  text-decoration: underline;
+  font-weight: 600;
+  transition: var(--transition-smooth);
+}
+
+.log-link:hover {
+  color: var(--gold-primary);
+  text-shadow: 0 0 8px var(--gold-glow);
+}
+
 /* Modal Overlay */
 .modal-overlay {
   position: fixed;
