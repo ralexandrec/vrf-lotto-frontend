@@ -50,7 +50,7 @@ function App() {
   const [winnerPrize, setWinnerPrize] = useState("0.0");
   const [isPlacingBet, setIsPlacingBet] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [activeTab, setActiveTab] = useState("global");
+  const [activeTab, setActiveTab] = useState("user");
   const [logs, setLogs] = useState([]);
 
   // Referência para evitar múltiplos listeners em React StrictMode
@@ -828,18 +828,18 @@ function App() {
           <h2>{t("log.title")}</h2>
           <div className="log-tabs">
             <button 
-              id="log-tab-global"
-              className={`log-tab-btn ${activeTab === "global" ? "active" : ""}`}
-              onClick={() => setActiveTab("global")}
-            >
-              {t("log.tab.global")}
-            </button>
-            <button 
               id="log-tab-user"
               className={`log-tab-btn ${activeTab === "user" ? "active" : ""}`}
               onClick={() => setActiveTab("user")}
             >
               {t("log.tab.user")}
+            </button>
+            <button 
+              id="log-tab-global"
+              className={`log-tab-btn ${activeTab === "global" ? "active" : ""}`}
+              onClick={() => setActiveTab("global")}
+            >
+              {t("log.tab.global")}
             </button>
           </div>
         </div>

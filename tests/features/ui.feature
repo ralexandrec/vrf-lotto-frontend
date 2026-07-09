@@ -26,6 +26,8 @@ Feature: Interface do usuário do Lotchain
   Scenario: Validar carregamento das atividades históricas reais do contrato
     Given que eu acesso a página inicial do Lotchain
     When eu clico no botão de conectar carteira
+    Then a aba "My Activity" deve estar ativa
+    When eu clico na aba de log "General (Contract)"
     Then a aba "General (Contract)" deve estar ativa
     And as atividades históricas reais do contrato devem estar carregadas na tela
 
