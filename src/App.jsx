@@ -930,7 +930,7 @@ function App() {
                       <span className="faucet-name">{faucet.name}</span>
                       <span className="faucet-desc">{faucet.desc}</span>
                     </div>
-                    <a href={userAddress ? `${faucet.url}${faucet.url.includes("?") ? "&" : "?"}address=${userAddress}` : faucet.url} target="_blank" rel="noopener noreferrer" className="btn btn-secondary" style={{ padding: "6px 12px", fontSize: "0.85rem" }}>
+                    <a href={faucet.url} target="_blank" rel="noopener noreferrer" className="btn btn-secondary" style={{ padding: "6px 12px", fontSize: "0.85rem" }}>
                       Acessar
                     </a>
                   </div>
