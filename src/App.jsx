@@ -183,6 +183,20 @@ function App() {
         addLog(t("log.tx.error", { error: error.message }), "error");
       }
     } else {
+      try {
+        sessionStorage.setItem('pending_metamask_install', 'true');
+        
+        // Listener de foco para recarregar automaticamente quando o usuário voltar
+        window.addEventListener('focus', () => {
+          if (sessionStorage.getItem('pending_metamask_install') === 'true') {
+            sessionStorage.removeItem('pending_metamask_install');
+            window.location.reload();
+          }
+        }, { once: true });
+      } catch (e) {
+        console.error("sessionStorage error:", e);
+      }
+
       setShowReloadWarning(true);
       addLog("Instale a MetaMask para interagir!", "error");
       window.open("https://metamask.io/", "_blank");
