@@ -72,7 +72,8 @@ export const translations = {
     "admin.button.drawing": "SORTEANDO...",
     "admin.noPlayers": "Não há jogadores na rodada para sortear.",
     "log.tx.drawing": "Enviando transação de encerramento e sorteio...",
-    "log.tx.drawSuccess": "Sorteio iniciado com sucesso! ID de requisição enviado ao Chainlink VRF."
+    "log.tx.drawSuccess": "Sorteio iniciado com sucesso! ID de requisição enviado ao Chainlink VRF.",
+    "log.auditLabel": "Auditar VRF"
   },
   en: {
     "header.title": "LOTCHAIN",
@@ -147,7 +148,8 @@ export const translations = {
     "admin.button.drawing": "DRAWING...",
     "admin.noPlayers": "There are no players in this round to draw.",
     "log.tx.drawing": "Sending draw transaction...",
-    "log.tx.drawSuccess": "Draw transaction successful! Request ID sent to Chainlink VRF."
+    "log.tx.drawSuccess": "Draw transaction successful! Request ID sent to Chainlink VRF.",
+    "log.auditLabel": "Audit VRF"
   }
 };
 

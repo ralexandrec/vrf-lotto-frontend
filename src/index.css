@@ -613,6 +613,31 @@ p {
   text-shadow: 0 0 8px var(--gold-glow);
 }
 
+.log-audit-link {
+  font-size: 0.72rem;
+  color: var(--gold-primary);
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-left: 8px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  transition: var(--transition-smooth);
+  font-weight: 500;
+  vertical-align: middle;
+}
+
+.log-audit-link:hover {
+  background: rgba(212, 175, 55, 0.18);
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.25);
+  color: #fff;
+}
+
+
 /* Modal Overlay */
 .modal-overlay {
   position: fixed;

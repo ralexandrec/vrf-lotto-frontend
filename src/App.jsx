@@ -866,6 +866,17 @@ function App() {
                   </a>
                 )}
                 <span className={`log-text ${log.type}`}>{renderLogText(log)}</span>
+                {log.meta && log.meta.txHash && (
+                  <a 
+                    href={getExplorerUrl(log.meta.txHash, "tx")}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="log-audit-link"
+                    title={t("log.auditLabel")}
+                  >
+                    🛡️ {t("log.auditLabel")}
+                  </a>
+                )}
               </div>
             ))}
         </div>
