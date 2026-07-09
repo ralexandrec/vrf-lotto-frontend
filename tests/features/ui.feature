@@ -22,3 +22,9 @@ Feature: Interface do usuário do Lotchain
     Then as abas de log "Geral (Contrato)" e "Minhas Ações" devem estar visíveis
     When eu clico na aba de log "Minhas Ações"
     Then a aba "Minhas Ações" deve estar ativa
+
+  Scenario: Validar carregamento das atividades históricas reais do contrato
+    Given que eu acesso a página inicial do Lotchain
+    When eu clico no botão de conectar carteira
+    Then a aba "Geral (Contrato)" deve estar ativa
+    And as atividades históricas reais do contrato devem estar carregadas na tela

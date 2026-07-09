@@ -41,64 +41,127 @@ Before(async () => {
         }
 
         if (method === "eth_blockNumber") {
-          return "0x3e8"; // 1000 em hex
+          return "0x29de000"; // Bloco real aproximado correspondente ao dump (43900928)
         }
 
         if (method === "eth_getLogs") {
           const filter = params ? params[0] : null;
           const filterTopics = filter?.topics || [];
           
-          const allLogs = [
+          const tickets = [
             {
               address: "0x10ed17d3F4AAD4043f34b9A9AD024c743f2Db46F",
-              blockHash: "0x0000000000000000000000000000000000000000000000000000000000000100",
-              blockNumber: "0x3e8", // 1000
+              blockHash: "0xefd1daff0f0c37d36e4dc34bf42ab8123ffaed3e11cf2139e53569ddf3fce7ff",
+              blockNumber: "0x29dd8f5",
               data: "0x",
-              logIndex: "0x0",
-              removed: false,
               topics: [
-                "0xe644a03c3c564ec9e825adadd36c476e0a10ba3e96ea01650aff1b553bbf34e3", // BilheteComprado
-                "0x0000000000000000000000001111111111111111111111111111111111111111"
+                "0xe644a03c3c564ec9e825adadd36c476e0a10ba3e96ea01650aff1b553bbf34e3",
+                "0x000000000000000000000000a15852884917690a94ccddee47188eb2759def2f"
               ],
-              transactionHash: "0x5555555555555555555555555555555555555555555555555555555555555555",
-              transactionIndex: "0x0"
+              transactionHash: "0xa01947fe5d2f3b581e46a2cbfbecff1a1b9685993a654fd5dd0d9f37d8792095",
+              transactionIndex: "0xa",
+              logIndex: "0x1a",
+              removed: false
             },
             {
               address: "0x10ed17d3F4AAD4043f34b9A9AD024c743f2Db46F",
-              blockHash: "0x0000000000000000000000000000000000000000000000000000000000000101",
-              blockNumber: "0x3e9", // 1001
+              blockHash: "0x37454d26937ba84929d0aa8ca4475fcbb361557156f3ffdf4174217bd3ccf55f",
+              blockNumber: "0x29dd9bb",
               data: "0x",
-              logIndex: "0x0",
-              removed: false,
               topics: [
-                "0xe644a03c3c564ec9e825adadd36c476e0a10ba3e96ea01650aff1b553bbf34e3", // BilheteComprado
-                "0x0000000000000000000000002222222222222222222222222222222222222222"
+                "0xe644a03c3c564ec9e825adadd36c476e0a10ba3e96ea01650aff1b553bbf34e3",
+                "0x000000000000000000000000c545124fa9704ba2ec880e3e5a141ebb6be98b41"
               ],
-              transactionHash: "0x5555555555555555555555555555555555555555555555555555555555555556",
-              transactionIndex: "0x0"
+              transactionHash: "0xd37a187d40d8d38cf406764a8a7ac9649226ca53d2a97e2ed59f29ccdbd5dbd2",
+              transactionIndex: "0x18",
+              logIndex: "0x82",
+              removed: false
             },
             {
               address: "0x10ed17d3F4AAD4043f34b9A9AD024c743f2Db46F",
-              blockHash: "0x0000000000000000000000000000000000000000000000000000000000000099",
-              blockNumber: "0x3e7", // 999
-              // data: premio (1.5 ETH) + requestId (1)
-              data: "0x00000000000000000000000000000000000000000000000014d1120d7b1600000000000000000000000000000000000000000000000000000000000000000001",
-              logIndex: "0x0",
-              removed: false,
+              blockHash: "0xa1693078ce8c680caf1a91a83d968564078dc1fe1214fae8a2b5cd85e1f88d04",
+              blockNumber: "0x29ddbe5",
+              data: "0x",
               topics: [
-                "0xa67547898330bfcb759cb0f460d13f13ce624befc285a30f961122f2a5badf20", // VencedorSorteado
-                "0x0000000000000000000000003333333333333333333333333333333333333333"
+                "0xe644a03c3c564ec9e825adadd36c476e0a10ba3e96ea01650aff1b553bbf34e3",
+                "0x000000000000000000000000eb12f3a5d5fb93684162e5966d1f6cc1d0ee2846"
               ],
-              transactionHash: "0x6666666666666666666666666666666666666666666666666666666666666666",
-              transactionIndex: "0x0"
+              transactionHash: "0x305fb42e4c7f577e6554949914ba31cb191caf8b4d55888fef269139aec65369",
+              transactionIndex: "0x2",
+              logIndex: "0xb",
+              removed: false
+            },
+            {
+              address: "0x10ed17d3F4AAD4043f34b9A9AD024c743f2Db46F",
+              blockHash: "0x07a0d5f58cf66f54e36fdbdedfe13fdd1d8d0e4e365875dd26b7e9b72fe5fa41",
+              blockNumber: "0x29db893",
+              data: "0x",
+              topics: [
+                "0xe644a03c3c564ec9e825adadd36c476e0a10ba3e96ea01650aff1b553bbf34e3",
+                "0x000000000000000000000000c545124fa9704ba2ec880e3e5a141ebb6be98b41"
+              ],
+              transactionHash: "0x72aeefc1f59432d14d21b1de7a3a8e124069b1cbcdae7c7419323e6cd9b6496a",
+              transactionIndex: "0x12",
+              logIndex: "0x78",
+              removed: false
+            },
+            {
+              address: "0x10ed17d3F4AAD4043f34b9A9AD024c743f2Db46F",
+              blockHash: "0x069d4be1d50c88d32538c4811b0485fc030293b83b65ca1bdf0237265d2a0f4c",
+              blockNumber: "0x29dadfe",
+              data: "0x",
+              topics: [
+                "0xe644a03c3c564ec9e825adadd36c476e0a10ba3e96ea01650aff1b553bbf34e3",
+                "0x000000000000000000000000c545124fa9704ba2ec880e3e5a141ebb6be98b41"
+              ],
+              transactionHash: "0x6ce88eaf44e300463364f8e99b01d30cfe8293a7c6aab04629f46c14d28c5a4b",
+              transactionIndex: "0xd",
+              logIndex: "0x18",
+              removed: false
+            }
+          ];
+          
+          const winners = [
+            {
+              address: "0x10ed17d3F4AAD4043f34b9A9AD024c743f2Db46F",
+              blockHash: "0xee6aa96327daa1e869ebba594f38bdc98359eab34ead4d2e9c89bbf0428ef86d",
+              blockNumber: "0x29db90e",
+              data: "0x0000000000000000000000000000000000000000000000000021c0331d5dc0003258b46ba37a4eb869e1ea7311ce3ad9bcd657c227da27df2c6452edae79ef02",
+              topics: [
+                "0xa67547898330bfcb759cb0f460d13f13ce624befc285a30f961122f2a5badf20",
+                "0x000000000000000000000000c545124fa9704ba2ec880e3e5a141ebb6be98b41"
+              ],
+              transactionHash: "0xddb5e88f1463637646f6ea77205bd87920ed1784beebe03ffebf3393776d1e6d",
+              transactionIndex: "0x16",
+              logIndex: "0x68",
+              removed: false
+            },
+            {
+              address: "0x10ed17d3F4AAD4043f34b9A9AD024c743f2Db46F",
+              blockHash: "0x0ba03f077e3e4e3628f4286150a48648c8df3c4b721ed30acf5dc1d1c068ffc6",
+              blockNumber: "0x29dae03",
+              data: "0x0000000000000000000000000000000000000000000000000021c0331d5dc0003fbdf8c61bf15f2759392558ee17a4475d40c41c27562c952686cba093a04fa6",
+              topics: [
+                "0xa67547898330bfcb759cb0f460d13f13ce624befc285a30f961122f2a5badf20",
+                "0x000000000000000000000000c545124fa9704ba2ec880e3e5a141ebb6be98b41"
+              ],
+              transactionHash: "0x076761a60bb87dc6640028ac3490f40b7d889b7d511ca81ba91a6fd25c1ab017",
+              transactionIndex: "0x14",
+              logIndex: "0x44",
+              removed: false
             }
           ];
 
           if (filterTopics.length > 0) {
             const targetTopic = filterTopics[0];
-            return allLogs.filter(log => log.topics[0] === targetTopic);
+            if (targetTopic === "0xe644a03c3c564ec9e825adadd36c476e0a10ba3e96ea01650aff1b553bbf34e3") {
+              return tickets;
+            }
+            if (targetTopic === "0xa67547898330bfcb759cb0f460d13f13ce624befc285a30f961122f2a5badf20") {
+              return winners;
+            }
           }
-          return allLogs;
+          return [...tickets, ...winners];
         }
         
         if (method === "eth_call") {
@@ -269,4 +332,15 @@ Then("a aba {string} deve estar ativa", async (tabName) => {
   const selector = isUserTab ? "#log-tab-user" : "#log-tab-global";
   const activeClass = await page.locator(selector).getAttribute("class");
   expect(activeClass).to.include("active");
+});
+
+Then("as atividades históricas reais do contrato devem estar carregadas na tela", async () => {
+  // Aguarda processamento assíncrono das queries de loteamento paralelo
+  await page.waitForTimeout(1000);
+
+  const logsContainer = page.locator(".logs-container");
+  const logContent = await logsContainer.textContent();
+  
+  expect(logContent.toLowerCase()).to.include("0xeb12...2846");
+  expect(logContent.toLowerCase()).to.include("0xc545...8b41");
 });
