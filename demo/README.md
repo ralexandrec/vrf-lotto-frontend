@@ -8,11 +8,11 @@ O pipeline gera uma locução em áudio sintético baseada em um roteiro pré-de
 
 ## 📁 Estrutura de Arquivos
 
-*   **[ROTEIRO_AUDIO.md](file:///Users/renatoalexandredacunha/Projetos/ContratoApostasNovoFrontend/demo/ROTEIRO_AUDIO.md):** Contém os textos segmentados por parágrafo que serão sintetizados para a locução.
-*   **[generate_tts.cjs](file:///Users/renatoalexandredacunha/Projetos/ContratoApostasNovoFrontend/demo/generate_tts.cjs):** Script Node.js que lê o roteiro e chama a API do Google TTS para gerar a narração em áudio, gravando as durações individuais de cada fala em `audio_durations.json` para sincronização perfeita do vídeo.
-*   **[demo_recording.feature](file:///Users/renatoalexandredacunha/Projetos/ContratoApostasNovoFrontend/demo/demo_recording.feature):** O cenário BDD do Cucumber que define a sequência exata de interações de tela (mudança de idioma, conexão de carteira, modal de faucet, compra de bilhete, sorteio do vencedor).
-*   **[demo.steps.cjs](file:///Users/renatoalexandredacunha/Projetos/ContratoApostasNovoFrontend/demo/demo.steps.cjs):** Implementação dos passos BDD no Playwright. Configura o tamanho do canvas do vídeo (1280x720), injeta o cursor virtual dourado e manipula a velocidade de cliques e flutuações do mouse baseado nos tempos calculados da fala correspondente.
-*   **[merge_video.cjs](file:///Users/renatoalexandredacunha/Projetos/ContratoApostasNovoFrontend/demo/merge_video.cjs):** Script que mescla a gravação de vídeo bruta (`demo_raw.webm`) e o áudio da narração (`narration.mp3`) utilizando o FFmpeg estático. Limpa metadados residuais de rotação para evitar deitamentos de tela no macOS.
+*   **[ROTEIRO_AUDIO.md](ROTEIRO_AUDIO.md):** Contém os textos segmentados por parágrafo que serão sintetizados para a locução.
+*   **[generate_tts.cjs](generate_tts.cjs):** Script Node.js que lê o roteiro e chama a API do Google TTS para gerar a narração em áudio, gravando as durações individuais de cada fala em `audio_durations.json` para sincronização perfeita do vídeo.
+*   **[demo_recording.feature](demo_recording.feature):** O cenário BDD do Cucumber que define a sequência exata de interações de tela (mudança de idioma, conexão de carteira, modal de faucet, compra de bilhete, sorteio do vencedor).
+*   **[demo.steps.cjs](demo.steps.cjs):** Implementação dos passos BDD no Playwright. Configura o tamanho do canvas do vídeo (1280x720), injeta o cursor virtual dourado e manipula a velocidade de cliques e flutuações do mouse baseado nos tempos calculados da fala correspondente.
+*   **[merge_video.cjs](merge_video.cjs):** Script que mescla a gravação de vídeo bruta (`demo_raw.webm`) e o áudio da narração (`narration.mp3`) utilizando o FFmpeg estático. Limpa metadados residuais de rotação para evitar deitamentos de tela no macOS.
 *   **`videos/`:** Diretório (ignorado pelo Git) onde as saídas do pipeline são geradas.
 
 ---
@@ -28,7 +28,7 @@ npm run dev
 ```
 
 ### 2. Gerar a Narração de Áudio (Opcional)
-Se você alterou o roteiro [ROTEIRO_AUDIO.md](file:///Users/renatoalexandredacunha/Projetos/ContratoApostasNovoFrontend/demo/ROTEIRO_AUDIO.md), atualize os arquivos de áudio de locução e seus metadados de tempo:
+Se você alterou o roteiro [ROTEIRO_AUDIO.md](ROTEIRO_AUDIO.md), atualize os arquivos de áudio de locução e seus metadados de tempo:
 ```bash
 # Define a chave de API do Google Cloud necessária antes de rodar
 export GOOGLE_API_KEY="sua-chave-aqui"

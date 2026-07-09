@@ -83,9 +83,9 @@ To generate the complete final video demo:
    ```bash
    npm run demo
    ```
-3. The final compiled video will be saved at [demo/videos/demo_final.mp4](file:///.../ContratoApostasNovoFrontend/demo/videos/demo_final.mp4).
+3. The final compiled video will be saved at [demo/videos/demo_final.mp4](demo/videos/demo_final.mp4).
 
-For advanced custom audio synthesis and voice configurations, please check the [demo documentation](file:///Users/renatoalexandredacunha/Projetos/ContratoApostasNovoFrontend/demo/README.md).
+For advanced custom audio synthesis and voice configurations, please check the [demo documentation](demo/README.md).
 
 ---
 
