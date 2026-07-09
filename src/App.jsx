@@ -380,8 +380,8 @@ function App() {
 
   // Links do Faucet para Testnet (Base Sepolia)
   const faucets = [
+    { name: "ZalaLena Faucet", url: "https://faucet.zalalena.com/base", desc: "Reivindicação rápida na rede Base Sepolia" },
     { name: "Superchain Faucet", url: "https://faucets.chain.link/base-sepolia", desc: "Fornecido pela Chainlink Network" },
-    { name: "Coinbase Faucet", url: "https://www.coinbase.com/faucets/base-ethereum-sepolia-faucet", desc: "Reivindique diretamente na Coinbase Developer" },
     { name: "QuickNode Faucet", url: "https://faucet.quicknode.com/base/sepolia", desc: "Reivindicação rápida de testnet ETH" }
   ];
 
