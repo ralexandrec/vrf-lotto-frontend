@@ -610,6 +610,38 @@ Then("eu devo ser redirecionado para o deep link do MetaMask", async () => {
   expect(targetUrl).to.include("metamask.app.link/dapp");
 });
 
+Then("o log de compra de bilhete nao deve conter o link de auditar VRF", async () => {
+  const logEntries = page.locator(".log-entry", { hasText: /bilhete comprado|ticket bought/i });
+  const count = await logEntries.count();
+  expect(count).to.be.greaterThan(0);
+  
+  for (let i = 0; i < count; i++) {
+    const entry = logEntries.nth(i);
+    const auditLink = entry.locator(".log-audit-link");
+    const isVisible = await auditLink.isVisible();
+    expect(isVisible).to.be.false;
+  }
+});
+
+Then("o log de sorteio concluido deve conter o link de auditar VRF", async () => {
+  const logEntries = page.locator(".log-entry", { hasText: /Sorteio concluído|Draw finished/i });
+  const count = await logEntries.count();
+  expect(count).to.be.greaterThan(0);
+  
+  for (let i = 0; i < count; i++) {
+    const entry = logEntries.nth(i);
+    const auditLink = entry.locator(".log-audit-link");
+    const isVisible = await auditLink.isVisible();
+    expect(isVisible).to.be.true;
+    
+    const text = await auditLink.innerText();
+    expect(text).to.include("VRF");
+    
+    const href = await auditLink.getAttribute("href");
+    expect(href).to.include("/tx/");
+  }
+});
+
 function setLocalPage(p, c, b) {
   page = p;
   context = c;

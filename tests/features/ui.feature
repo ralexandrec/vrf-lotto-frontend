@@ -59,3 +59,10 @@ Feature: Interface do usuário do Lotchain
     And que o navegador móvel não possui a extensão MetaMask
     And que eu acesso a página inicial do Lotchain
     Then eu devo ser redirecionado para o deep link do MetaMask
+
+  Scenario: Validar exibição do link de auditoria do VRF apenas nos logs de sorteio
+    Given que eu acesso a página inicial do Lotchain
+    When eu clico no botão de conectar carteira
+    And eu clico na aba de log "Geral (Contrato)"
+    Then o log de compra de bilhete nao deve conter o link de auditar VRF
+    And o log de sorteio concluido deve conter o link de auditar VRF
