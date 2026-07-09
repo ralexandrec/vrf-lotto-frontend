@@ -68,7 +68,12 @@ export const translations = {
     "admin.button.drawing": "SORTEANDO...",
     "admin.noPlayers": "Não há jogadores na rodada para sortear.",
     "log.tx.drawing": "Enviando transação de encerramento e sorteio...",
-    "log.tx.drawSuccess": "Sorteio iniciado com sucesso! ID de requisição enviado ao Chainlink VRF."
+    "log.tx.drawSuccess": "Sorteio iniciado com sucesso! ID de requisição enviado ao Chainlink VRF.",
+    
+    // Install Warning
+    "install.reloadTitle": "⚠️ MetaMask Instalada?",
+    "install.reloadDesc": "Se você acabou de instalar a extensão do MetaMask, você precisa recarregar esta página para que ela seja detectada pelo aplicativo.",
+    "install.reloadButton": "Recarregar Página"
   },
   en: {
     "header.title": "LOTCHAIN",
@@ -139,7 +144,12 @@ export const translations = {
     "admin.button.drawing": "DRAWING...",
     "admin.noPlayers": "There are no players in this round to draw.",
     "log.tx.drawing": "Sending draw transaction...",
-    "log.tx.drawSuccess": "Draw transaction successful! Request ID sent to Chainlink VRF."
+    "log.tx.drawSuccess": "Draw transaction successful! Request ID sent to Chainlink VRF.",
+    
+    // Install Warning
+    "install.reloadTitle": "⚠️ MetaMask Installed?",
+    "install.reloadDesc": "If you have just installed the MetaMask extension, you need to reload this page so that it can be detected by the application.",
+    "install.reloadButton": "Reload Page"
   }
 };
 
