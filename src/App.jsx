@@ -36,7 +36,6 @@ function App() {
   const [winnerPrize, setWinnerPrize] = useState("0.0");
   const [isPlacingBet, setIsPlacingBet] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [showReloadWarning, setShowReloadWarning] = useState(false);
   const [logs, setLogs] = useState([]);
 
   // Referência para evitar múltiplos listeners em React StrictMode
@@ -197,7 +196,6 @@ function App() {
         console.error("sessionStorage error:", e);
       }
 
-      setShowReloadWarning(true);
       addLog("Instale a MetaMask para interagir!", "error");
       window.open("https://metamask.io/", "_blank");
     }
@@ -441,16 +439,6 @@ function App() {
           </button>
         </div>
       </header>
-
-      {showReloadWarning && (
-        <section className="card reload-warning-card" style={{ border: "1px dashed var(--accent-red)", background: "rgba(255, 77, 77, 0.05)", padding: "20px", display: "flex", flexDirection: "column", gap: "12px", alignItems: "center", textAlign: "center", marginBottom: "20px", marginTop: "20px" }}>
-          <h3 style={{ color: "var(--accent-red)", margin: 0 }}>{t("install.reloadTitle")}</h3>
-          <p style={{ margin: 0, fontSize: "0.95rem" }}>{t("install.reloadDesc")}</p>
-          <button className="btn btn-primary" onClick={() => window.location.reload()} style={{ alignSelf: "center", marginTop: "4px" }}>
-            {t("install.reloadButton")}
-          </button>
-        </section>
-      )}
 
       {/* Configuração de Contrato */}
       <section className="card">
