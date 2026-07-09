@@ -848,13 +848,18 @@ function App() {
             })
             .map((log) => (
               <div key={log.id} className="log-entry">
-                <span 
-                  className="log-time"
-                  title={log.blockNumber ? t("log.blockTooltip", { number: log.blockNumber }) : undefined}
-                  style={log.blockNumber ? { cursor: "help" } : undefined}
-                >
-                  [{log.time}]
-                </span>
+                <span className="log-time">[{log.time}]</span>
+                {log.blockNumber && (
+                  <a 
+                    href={getExplorerUrl(log.blockNumber, "block")}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="log-block-link"
+                    title={t("log.blockTooltip", { number: log.blockNumber })}
+                  >
+                    [{t("log.blockLabel", { number: log.blockNumber })}]
+                  </a>
+                )}
                 <span className={`log-text ${log.type}`}>{renderLogText(log)}</span>
               </div>
             ))}

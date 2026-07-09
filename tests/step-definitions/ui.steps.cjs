@@ -367,10 +367,18 @@ Then("as atividades históricas reais do contrato devem estar carregadas na tela
   
   expect(logContent.toLowerCase()).to.include("0xeb12...2846");
   expect(logContent.toLowerCase()).to.include("0xc545...8b41");
-  
-  // Como o timestamp mockado é antigo (10 de Junho de 2024), deve conter o formato de dia/mês "10/06"
   expect(logContent).to.include("10/06");
-  
-  // Garante que o prefixo ~ do Plano B foi totalmente removido
   expect(logContent).to.not.include("~");
+
+  // Valida que o link clicável do bloco está presente no HTML
+  const blockLink = page.locator("a.log-block-link").first();
+  const blockLinkHref = await blockLink.getAttribute("href");
+  const blockLinkText = await blockLink.textContent();
+  
+  expect(blockLinkHref).to.include("basescan.org/block/");
+  
+  // Suporte flexível para PT ou EN no texto da tag de bloco do i18n
+  const isPt = blockLinkText.toLowerCase().includes("bloco");
+  const isEn = blockLinkText.toLowerCase().includes("block");
+  expect(isPt || isEn).to.be.true;
 });

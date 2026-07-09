@@ -572,6 +572,19 @@ p {
   flex-shrink: 0;
 }
 
+.log-block-link {
+  color: var(--gold-secondary);
+  text-decoration: none;
+  flex-shrink: 0;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.log-block-link:hover {
+  color: var(--gold-primary);
+  text-decoration: underline;
+}
+
 .log-text {
   color: var(--text-secondary);
 }
