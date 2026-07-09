@@ -12,6 +12,15 @@ function App() {
   // Estado de Internacionalização
   const [lang, setLang] = useState(detectLanguage());
 
+  // Salva a preferência de idioma no localStorage sempre que alterado
+  useEffect(() => {
+    try {
+      localStorage.setItem("preferred_language", lang);
+    } catch (e) {
+      console.error("Failed to save language preference:", e);
+    }
+  }, [lang]);
+
   // Estado de Conexão da Carteira
   const [walletConnected, setWalletConnected] = useState(false);
   const [userAddress, setUserAddress] = useState("");

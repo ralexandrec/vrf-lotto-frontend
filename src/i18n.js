@@ -144,9 +144,23 @@ export const translations = {
 };
 
 export const detectLanguage = () => {
+  try {
+    const savedLang = localStorage.getItem("preferred_language");
+    if (savedLang === "pt" || savedLang === "en") {
+      return savedLang;
+    }
+  } catch (e) {
+    console.error("Failed to read preferred language:", e);
+  }
+
   const browserLang = navigator.language || navigator.userLanguage || "en";
-  const shortLang = browserLang.substring(0, 2).toLowerCase();
-  return translations[shortLang] ? shortLang : "en";
+  const langLower = browserLang.toLowerCase();
+
+  if (langLower.startsWith("pt") || langLower.includes("portuguese") || langLower.startsWith("ptb")) {
+    return "pt";
+  }
+
+  return "en";
 };
 
 export const translate = (key, lang = "en", params = {}) => {
