@@ -16,3 +16,9 @@ Feature: Interface do usuário do Lotchain
     When eu clico no botão de conectar carteira
     Then o painel do administrador deve estar visível na página
     And o botão de sortear vencedor deve estar visível
+
+  Scenario: Validar visualização e alternância das abas de log
+    Given que eu acesso a página inicial do Lotchain
+    Then as abas de log "Geral (Contrato)" e "Minhas Ações" devem estar visíveis
+    When eu clico na aba de log "Minhas Ações"
+    Then a aba "Minhas Ações" deve estar ativa

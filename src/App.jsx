@@ -8,6 +8,11 @@ const BASE_SEPOLIA_CHAIN_ID = "84532"; // Decimal ID para Base Sepolia
 const BASE_SEPOLIA_HEX_CHAIN_ID = "0x14a34"; // Hex ID para Base Sepolia
 const BASE_MAINNET_CHAIN_ID = "8453"; // Decimal ID para Base Mainnet
 
+// Expressões Regulares compiladas uma única vez
+const ADDRESS_REGEX = /0x[a-fA-F0-9]{4}\.\.\.[a-fA-F0-9]{4}/gi;
+const TX_REGEX = /0x[a-fA-F0-9]{10}\.\.\./gi;
+const FULL_ADDRESS_REGEX = /0x[a-fA-F0-9]{40}/gi;
+
 function App() {
   // Estado de Internacionalização
   const [lang, setLang] = useState(detectLanguage());
@@ -45,6 +50,7 @@ function App() {
   const [winnerPrize, setWinnerPrize] = useState("0.0");
   const [isPlacingBet, setIsPlacingBet] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [activeTab, setActiveTab] = useState("global");
   const [logs, setLogs] = useState([]);
 
   // Referência para evitar múltiplos listeners em React StrictMode
@@ -54,12 +60,16 @@ function App() {
   const t = (key, params = {}) => translate(key, lang, params);
 
   // Adiciona logs no console visual
-  const addLog = (text, type = "default", meta = {}) => {
+  const addLog = (text, type = "default", meta = {}, scope = "user") => {
     const timestamp = new Date().toLocaleTimeString();
-    setLogs((prevLogs) => [
-      { id: Date.now() + Math.random(), time: timestamp, text, type, meta },
-      ...prevLogs.slice(0, 49), // Limita a 50 itens
-    ]);
+    const id = meta.txHash ? `${meta.txHash}-${type}` : `${Date.now()}-${Math.random()}`;
+
+    setLogs((prevLogs) => {
+      const newLog = { id, time: timestamp, text, type, meta, scope };
+      const combined = [newLog, ...prevLogs];
+      const unique = combined.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
+      return unique.slice(0, 50);
+    });
   };
 
   const getExplorerUrl = (addressOrTx, type = "address") => {
@@ -69,15 +79,12 @@ function App() {
   };
 
   const renderLogText = (log) => {
-    const addressRegex = /0x[a-fA-F0-9]{4}\.\.\.[a-fA-F0-9]{4}/gi;
-    const txRegex = /0x[a-fA-F0-9]{10}\.\.\./gi;
-    const fullAddressRegex = /0x[a-fA-F0-9]{40}/gi;
     let text = log.text;
 
     if (log.meta && log.meta.address) {
-      const parts = text.split(addressRegex);
+      const parts = text.split(ADDRESS_REGEX);
       if (parts.length > 1) {
-        const matches = text.match(addressRegex);
+        const matches = text.match(ADDRESS_REGEX);
         const abbrAddress = matches ? matches[0] : "";
         const explorerUrl = getExplorerUrl(log.meta.address, "address");
         return (
@@ -93,9 +100,9 @@ function App() {
     }
 
     if (log.meta && log.meta.txHash) {
-      const parts = text.split(txRegex);
+      const parts = text.split(TX_REGEX);
       if (parts.length > 1) {
-        const matches = text.match(txRegex);
+        const matches = text.match(TX_REGEX);
         const abbrTx = matches ? matches[0] : "";
         const explorerUrl = getExplorerUrl(log.meta.txHash, "tx");
         return (
@@ -110,10 +117,10 @@ function App() {
       }
     }
 
-    const fullAddressMatch = text.match(fullAddressRegex);
+    const fullAddressMatch = text.match(FULL_ADDRESS_REGEX);
     if (fullAddressMatch) {
       const addr = fullAddressMatch[0];
-      const parts = text.split(fullAddressRegex);
+      const parts = text.split(FULL_ADDRESS_REGEX);
       const explorerUrl = getExplorerUrl(addr, "address");
       return (
         <>
@@ -351,8 +358,80 @@ function App() {
         const balance = await provider.getBalance(userAddress);
         setUserBalance(ethers.formatEther(balance));
       }
+
+      // Carrega os logs históricos
+      await loadHistoricalEvents(contract, provider);
     } catch (error) {
       console.error("Error loading contract details", error);
+    }
+  };
+
+  const loadHistoricalEvents = async (contract, provider) => {
+    try {
+      const latestBlock = await provider.getBlockNumber();
+      // Limite de 10.000 blocos (~5.5 horas de histórico a 2s/bloco)
+      const fromBlock = Math.max(0, latestBlock - 10000);
+
+      const filterTicket = contract.filters.BilheteComprado();
+      const filterWinner = contract.filters.VencedorSorteado();
+
+      const [ticketEvents, winnerEvents] = await Promise.all([
+        contract.queryFilter(filterTicket, fromBlock),
+        contract.queryFilter(filterWinner, fromBlock)
+      ]);
+
+      const parsedTicketLogs = ticketEvents.map(e => {
+        const jogador = e.args[0];
+        return {
+          id: `${e.transactionHash}-buy`,
+          time: `Bloco #${e.blockNumber}`,
+          text: t("log.event.ticketBought", { address: `${jogador.substring(0, 6)}...${jogador.substring(38)}` }),
+          type: "highlight",
+          meta: { address: jogador, txHash: e.transactionHash },
+          scope: jogador.toLowerCase() === (userAddress || "").toLowerCase() ? "both" : "global",
+          blockNumber: e.blockNumber
+        };
+      });
+
+      const parsedWinnerLogs = winnerEvents.map(e => {
+        const vencedor = e.args[0];
+        const premio = ethers.formatEther(e.args[1]);
+        const isUser = vencedor.toLowerCase() === (userAddress || "").toLowerCase();
+        const scope = isUser ? "both" : "global";
+
+        return [
+          {
+            id: `${e.transactionHash}-winner`,
+            time: `Bloco #${e.blockNumber}`,
+            text: t("log.event.winnerDrawn", { winner: `${vencedor.substring(0, 6)}...${vencedor.substring(38)}` }),
+            type: "success",
+            meta: { address: vencedor, txHash: e.transactionHash },
+            scope: scope,
+            blockNumber: e.blockNumber
+          },
+          {
+            id: `${e.transactionHash}-prize`,
+            time: `Bloco #${e.blockNumber}`,
+            text: t("log.event.winnerPrize", { prize: premio }),
+            type: "success",
+            meta: { address: vencedor, txHash: e.transactionHash },
+            scope: scope,
+            blockNumber: e.blockNumber
+          }
+        ];
+      }).flat();
+
+      const sortedHistoricalLogs = [...parsedTicketLogs, ...parsedWinnerLogs].sort((a, b) => b.blockNumber - a.blockNumber);
+
+      setLogs((prevLogs) => {
+        // Preserva logs locais de UI (Minhas Ações) que não são eventos blockchain
+        const uiLogs = prevLogs.filter(l => l.scope === "user" && !l.meta?.txHash);
+        const combined = [...uiLogs, ...sortedHistoricalLogs];
+        const unique = combined.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
+        return unique.slice(0, 50);
+      });
+    } catch (error) {
+      console.error("Error loading historical events:", error);
     }
   };
 
@@ -368,20 +447,41 @@ function App() {
     }
     contractRef.current = contract;
 
-    contract.on("BilheteComprado", (jogador) => {
-      addLog(t("log.event.ticketBought", { address: `${jogador.substring(0, 6)}...${jogador.substring(38)}` }), "highlight", { address: jogador });
+    contract.on("BilheteComprado", (jogador, event) => {
+      const txHash = event?.log?.transactionHash || "";
+      addLog(
+        t("log.event.ticketBought", { address: `${jogador.substring(0, 6)}...${jogador.substring(38)}` }),
+        "highlight",
+        { address: jogador, txHash },
+        jogador.toLowerCase() === (userAddress || "").toLowerCase() ? "both" : "global"
+      );
       loadContractData();
     });
 
-    contract.on("SorteioIniciado", () => {
-      addLog(t("log.event.drawStarted"), "highlight");
+    contract.on("SorteioIniciado", (event) => {
+      const txHash = event?.log?.transactionHash || "";
+      addLog(t("log.event.drawStarted"), "highlight", { txHash }, "global");
       loadContractData();
     });
 
-    contract.on("VencedorSorteado", (vencedor, premio) => {
+    contract.on("VencedorSorteado", (vencedor, premio, event) => {
+      const txHash = event?.log?.transactionHash || "";
       const formattedPrize = ethers.formatEther(premio);
-      addLog(t("log.event.winnerDrawn", { winner: `${vencedor.substring(0, 6)}...${vencedor.substring(38)}` }), "success", { address: vencedor });
-      addLog(t("log.event.winnerPrize", { prize: formattedPrize }), "success");
+      const isUser = vencedor.toLowerCase() === (userAddress || "").toLowerCase();
+      const scope = isUser ? "both" : "global";
+
+      addLog(
+        t("log.event.winnerDrawn", { winner: `${vencedor.substring(0, 6)}...${vencedor.substring(38)}` }),
+        "success",
+        { address: vencedor, txHash },
+        scope
+      );
+      addLog(
+        t("log.event.winnerPrize", { prize: formattedPrize }),
+        "success",
+        { address: vencedor, txHash },
+        scope
+      );
       
       // Abre modal se for o vencedor conectado
       if (userAddress && vencedor.toLowerCase() === userAddress.toLowerCase()) {
@@ -653,14 +753,40 @@ function App() {
 
       {/* Console de Atividades em Tempo Real */}
       <section className="card activity-log">
-        <h2>{t("log.title")}</h2>
+        <div className="log-header">
+          <h2>{t("log.title")}</h2>
+          <div className="log-tabs">
+            <button 
+              id="log-tab-global"
+              className={`log-tab-btn ${activeTab === "global" ? "active" : ""}`}
+              onClick={() => setActiveTab("global")}
+            >
+              {t("log.tab.global")}
+            </button>
+            <button 
+              id="log-tab-user"
+              className={`log-tab-btn ${activeTab === "user" ? "active" : ""}`}
+              onClick={() => setActiveTab("user")}
+            >
+              {t("log.tab.user")}
+            </button>
+          </div>
+        </div>
         <div className="logs-container">
-          {logs.map((log) => (
-            <div key={log.id} className="log-entry">
-              <span className="log-time">[{log.time}]</span>
-              <span className={`log-text ${log.type}`}>{renderLogText(log)}</span>
-            </div>
-          ))}
+          {logs
+            .filter((log) => {
+              if (activeTab === "global") {
+                return log.scope === "global" || log.scope === "both";
+              } else {
+                return log.scope === "user" || log.scope === "both";
+              }
+            })
+            .map((log) => (
+              <div key={log.id} className="log-entry">
+                <span className="log-time">[{log.time}]</span>
+                <span className={`log-text ${log.type}`}>{renderLogText(log)}</span>
+              </div>
+            ))}
         </div>
       </section>
 

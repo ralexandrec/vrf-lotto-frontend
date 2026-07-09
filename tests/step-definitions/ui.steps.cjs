@@ -39,6 +39,67 @@ Before(async () => {
           // Retorna um bytecode fictício limpo sem reticências
           return "0x60806040526004361061012957";
         }
+
+        if (method === "eth_blockNumber") {
+          return "0x3e8"; // 1000 em hex
+        }
+
+        if (method === "eth_getLogs") {
+          const filter = params ? params[0] : null;
+          const filterTopics = filter?.topics || [];
+          
+          const allLogs = [
+            {
+              address: "0x10ed17d3F4AAD4043f34b9A9AD024c743f2Db46F",
+              blockHash: "0x0000000000000000000000000000000000000000000000000000000000000100",
+              blockNumber: "0x3e8", // 1000
+              data: "0x",
+              logIndex: "0x0",
+              removed: false,
+              topics: [
+                "0xe644a03c3c564ec9e825adadd36c476e0a10ba3e96ea01650aff1b553bbf34e3", // BilheteComprado
+                "0x0000000000000000000000001111111111111111111111111111111111111111"
+              ],
+              transactionHash: "0x5555555555555555555555555555555555555555555555555555555555555555",
+              transactionIndex: "0x0"
+            },
+            {
+              address: "0x10ed17d3F4AAD4043f34b9A9AD024c743f2Db46F",
+              blockHash: "0x0000000000000000000000000000000000000000000000000000000000000101",
+              blockNumber: "0x3e9", // 1001
+              data: "0x",
+              logIndex: "0x0",
+              removed: false,
+              topics: [
+                "0xe644a03c3c564ec9e825adadd36c476e0a10ba3e96ea01650aff1b553bbf34e3", // BilheteComprado
+                "0x0000000000000000000000002222222222222222222222222222222222222222"
+              ],
+              transactionHash: "0x5555555555555555555555555555555555555555555555555555555555555556",
+              transactionIndex: "0x0"
+            },
+            {
+              address: "0x10ed17d3F4AAD4043f34b9A9AD024c743f2Db46F",
+              blockHash: "0x0000000000000000000000000000000000000000000000000000000000000099",
+              blockNumber: "0x3e7", // 999
+              // data: premio (1.5 ETH) + requestId (1)
+              data: "0x00000000000000000000000000000000000000000000000014d1120d7b1600000000000000000000000000000000000000000000000000000000000000000001",
+              logIndex: "0x0",
+              removed: false,
+              topics: [
+                "0xa67547898330bfcb759cb0f460d13f13ce624befc285a30f961122f2a5badf20", // VencedorSorteado
+                "0x0000000000000000000000003333333333333333333333333333333333333333"
+              ],
+              transactionHash: "0x6666666666666666666666666666666666666666666666666666666666666666",
+              transactionIndex: "0x0"
+            }
+          ];
+
+          if (filterTopics.length > 0) {
+            const targetTopic = filterTopics[0];
+            return allLogs.filter(log => log.topics[0] === targetTopic);
+          }
+          return allLogs;
+        }
         
         if (method === "eth_call") {
           const data = params[0].data;
@@ -172,4 +233,40 @@ Then("o painel do administrador deve estar visível na página", async () => {
 Then("o botão de sortear vencedor deve estar visível", async () => {
   const isVisible = await page.locator("#draw-winner-btn").isVisible();
   expect(isVisible).to.be.true;
+});
+Then("as abas de log {string} e {string} devem estar visíveis", async (tab1, tab2) => {
+  const isTab1Visible = await page.locator("#log-tab-global").isVisible();
+  const isTab2Visible = await page.locator("#log-tab-user").isVisible();
+  expect(isTab1Visible).to.be.true;
+  expect(isTab2Visible).to.be.true;
+  
+  const text1 = await page.locator("#log-tab-global").textContent();
+  const text2 = await page.locator("#log-tab-user").textContent();
+  
+  // Suporte flexível para PT e EN nos testes dependendo do locale do browser
+  const isPt = text1.includes("Geral") || text1.includes("Contrato");
+  if (isPt) {
+    expect(text1).to.include("Geral");
+    expect(text2).to.include("Minhas Ações");
+  } else {
+    expect(text1).to.include("General");
+    expect(text2).to.include("My Activity");
+  }
+});
+
+When("eu clico na aba de log {string}", async (tabName) => {
+  const normalized = tabName.toLowerCase();
+  if (normalized.includes("ações") || normalized.includes("activity") || normalized.includes("minhas")) {
+    await page.locator("#log-tab-user").click();
+  } else {
+    await page.locator("#log-tab-global").click();
+  }
+});
+
+Then("a aba {string} deve estar ativa", async (tabName) => {
+  const normalized = tabName.toLowerCase();
+  const isUserTab = normalized.includes("ações") || normalized.includes("activity") || normalized.includes("minhas");
+  const selector = isUserTab ? "#log-tab-user" : "#log-tab-global";
+  const activeClass = await page.locator(selector).getAttribute("class");
+  expect(activeClass).to.include("active");
 });
