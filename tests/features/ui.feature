@@ -45,3 +45,15 @@ Feature: Interface do usuário do Lotchain
     And que eu acesso a página inicial do Lotchain
     Then a logo e os controles do header devem estar em linhas separadas
     And o input de contrato e o botão de carregar devem estar em linhas separadas
+
+  Scenario: Conectar carteira no navegador interno do MetaMask (Mobile)
+    Given que eu configuro a tela para "celular"
+    And que eu acesso a página inicial do Lotchain
+    When eu clico no botão de conectar carteira
+    Then o painel do administrador deve estar visível na página
+
+  Scenario: Redirecionar para o app do MetaMask a partir de navegador móvel externo (Mobile Deep Link)
+    Given que eu configuro a tela para "celular"
+    And que o navegador móvel não possui a extensão MetaMask
+    And que eu acesso a página inicial do Lotchain
+    Then eu devo ser redirecionado para o deep link do MetaMask

@@ -7,6 +7,10 @@ let context;
 let page;
 
 const setupMocks = async (targetPage) => {
+  targetPage.on("console", msg => {
+    console.log(`[PAGE LOG]: ${msg.text()}`);
+  });
+
   // Injetar Mock do window.ethereum antes de cada carregamento de página
   await targetPage.addInitScript(() => {
     Object.defineProperty(navigator, 'language', { get: () => 'en-US', configurable: true });
@@ -465,4 +469,30 @@ Then("o input de contrato e o botão de carregar devem estar em linhas separadas
   expect(inputBox.x + inputBox.width).to.be.lessThanOrEqual(viewport.width);
   expect(buttonBox.x).to.be.greaterThanOrEqual(0);
   expect(buttonBox.x + buttonBox.width).to.be.lessThanOrEqual(viewport.width);
+});
+
+Given("que o navegador móvel não possui a extensão MetaMask", async () => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'ethereum', {
+      get: () => undefined,
+      configurable: true
+    });
+  });
+});
+
+Then("eu devo ser redirecionado para o deep link do MetaMask", async () => {
+  // Intercepta requisições de rede para a MetaMask para rodar 100% offline
+  await page.route("**/metamask.app.link/dapp/**", route => {
+    route.fulfill({
+      status: 200,
+      contentType: "text/html",
+      body: "<h1>MetaMask Redirect Mocked</h1>"
+    });
+  });
+
+  await page.locator("#connect-wallet-btn").click();
+  
+  await page.waitForURL("**/metamask.app.link/dapp/**", { timeout: 5000 });
+  const targetUrl = page.url();
+  expect(targetUrl).to.include("metamask.app.link/dapp");
 });
