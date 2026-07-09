@@ -126,3 +126,7 @@ test-results/
 playwright-report/
 blob-report/
 playwright/.cache/
+
+# Demo Assets
+demo/videos/
+

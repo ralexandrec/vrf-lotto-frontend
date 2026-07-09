@@ -16,12 +16,41 @@ const setupMocks = async (targetPage) => {
     Object.defineProperty(navigator, 'language', { get: () => 'en-US', configurable: true });
     Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'], configurable: true });
 
+    let currentBlock = 43900928;
+    let lastTxTime = 0;
+    const listeners = {};
+
+    // Simula a mineração de novos blocos a cada 1.5 segundos na blockchain fictícia
+    setInterval(() => {
+      currentBlock++;
+      if (listeners["block"]) {
+        listeners["block"].forEach(cb => {
+          try { cb("0x" + currentBlock.toString(16)); } catch (e) {}
+        });
+      }
+    }, 1500);
+
     window.ethereum = {
       isMetaMask: true,
-      request: async (requestInfo) => {
-        const { method, params } = requestInfo;
+      request: async (arg1, arg2) => {
+        let method;
+        let params;
+        if (typeof arg1 === 'string') {
+          method = arg1;
+          params = arg2;
+        } else if (arg1 && typeof arg1 === 'object') {
+          method = arg1.method;
+          params = arg1.params;
+        }
+
+        if (!method) return null;
         
-        if (method === "eth_requestAccounts" || method === "eth_accounts") {
+        if (method === "eth_accounts") {
+          const isConnected = sessionStorage.getItem("__mock_connected") !== "false";
+          return isConnected ? ["0xc545124fa9704ba2ec880e3e5a141ebb6be98b41"] : [];
+        }
+        if (method === "eth_requestAccounts") {
+          sessionStorage.setItem("__mock_connected", "true");
           return ["0xc545124fa9704ba2ec880e3e5a141ebb6be98b41"];
         }
         
@@ -30,7 +59,7 @@ const setupMocks = async (targetPage) => {
         }
         
         if (method === "eth_getBalance") {
-          return "0xde0b6b3a7640000"; // 1 ETH em hex (wei)
+          return sessionStorage.getItem("__mock_balance") || "0xde0b6b3a7640000"; // 1 ETH por padrão
         }
         
         if (method === "eth_getCode") {
@@ -39,17 +68,34 @@ const setupMocks = async (targetPage) => {
         }
 
         if (method === "eth_blockNumber") {
-          return "0x29de000"; // Bloco real aproximado correspondente ao dump (43900928)
+          return "0x" + currentBlock.toString(16);
+        }
+
+        if (method === "eth_getTransactionCount") {
+          return "0x0"; // Nonce inicial
+        }
+
+        if (method === "eth_feeHistory") {
+          return {
+            baseFeePerGas: ["0x3b9aca00"],
+            gasUsedRatio: [0.5],
+            oldestBlock: "0x" + (currentBlock - 5).toString(16),
+            reward: [["0x59682f00"]]
+          };
+        }
+
+        if (method === "wallet_switchEthereumChain" || method === "wallet_addEthereumChain") {
+          return null; // Retorno padrão de sucesso
         }
 
         if (method === "eth_getBlockByNumber") {
-          const blockHex = params ? params[0] : "0x29de000";
+          const blockHex = params ? params[0] : "0x" + currentBlock.toString(16);
           return {
             number: blockHex,
             hash: "0x0000000000000000000000000000000000000000000000000000000000000001",
             parentHash: "0x0000000000000000000000000000000000000000000000000000000000000000",
             sha3Uncles: "0x1dcc4de8dec75d7aab85b1b56fc1745a819024c2ed2137bc77a6f4577a911685",
-            logsBloom: "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            logsBloom: "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
             transactionsRoot: "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
             stateRoot: "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
             receiptsRoot: "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
@@ -60,17 +106,23 @@ const setupMocks = async (targetPage) => {
             size: "0x0",
             gasLimit: "0x0",
             gasUsed: "0x0",
-            timestamp: "0x66668700", // Corresponde a 10 de Junho de 2024 (1718000000)
+            timestamp: "0x66668700",
             transactions: [],
             uncles: []
           };
         }
 
         if (method === "eth_getLogs") {
-          const filter = params ? params[0] : null;
-          const filterTopics = filter?.topics || [];
+          const filter = (params && params[0]) || {};
+          const fromBlockHex = filter.fromBlock || "0x0";
+          const toBlockHex = filter.toBlock || "latest";
           
-          const tickets = [
+          const fromBlock = fromBlockHex === "latest" ? currentBlock : parseInt(fromBlockHex.replace("0x", ""), 16);
+          const toBlock = toBlockHex === "latest" ? currentBlock : (toBlockHex.startsWith("0x") ? parseInt(toBlockHex.replace("0x", ""), 16) : currentBlock);
+          
+          const filterTopics = filter.topics || [];
+          
+          const rawTickets = [
             {
               address: "0x10ed17d3F4AAD4043f34b9A9AD024c743f2Db46F",
               blockHash: "0xefd1daff0f0c37d36e4dc34bf42ab8123ffaed3e11cf2139e53569ddf3fce7ff",
@@ -143,7 +195,7 @@ const setupMocks = async (targetPage) => {
             }
           ];
           
-          const winners = [
+          const rawWinners = [
             {
               address: "0x10ed17d3F4AAD4043f34b9A9AD024c743f2Db46F",
               blockHash: "0xee6aa96327daa1e869ebba594f38bdc98359eab34ead4d2e9c89bbf0428ef86d",
@@ -151,7 +203,7 @@ const setupMocks = async (targetPage) => {
               data: "0x0000000000000000000000000000000000000000000000000021c0331d5dc0003258b46ba37a4eb869e1ea7311ce3ad9bcd657c227da27df2c6452edae79ef02",
               topics: [
                 "0xa67547898330bfcb759cb0f460d13f13ce624befc285a30f961122f2a5badf20",
-                "0x000000000000000000000000c545124fa9704ba2ec880e3e5a141ebb6be98b41"
+                "0x000000000000000000000000dD2FD4581271e230360230F9337D5c0430BF44C0"
               ],
               transactionHash: "0xddb5e88f1463637646f6ea77205bd87920ed1784beebe03ffebf3393776d1e6d",
               transactionIndex: "0x16",
@@ -165,7 +217,7 @@ const setupMocks = async (targetPage) => {
               data: "0x0000000000000000000000000000000000000000000000000021c0331d5dc0003fbdf8c61bf15f2759392558ee17a4475d40c41c27562c952686cba093a04fa6",
               topics: [
                 "0xa67547898330bfcb759cb0f460d13f13ce624befc285a30f961122f2a5badf20",
-                "0x000000000000000000000000c545124fa9704ba2ec880e3e5a141ebb6be98b41"
+                "0x000000000000000000000000dD2FD4581271e230360230F9337D5c0430BF44C0"
               ],
               transactionHash: "0x076761a60bb87dc6640028ac3490f40b7d889b7d511ca81ba91a6fd25c1ab017",
               transactionIndex: "0x14",
@@ -174,16 +226,33 @@ const setupMocks = async (targetPage) => {
             }
           ];
 
+          // Função de filtragem robusta
+          const filterLogs = (logsArray, topicHash) => {
+            return logsArray.filter(log => {
+              const logBlock = parseInt(log.blockNumber.replace("0x", ""), 16);
+              if (logBlock < fromBlock || logBlock > toBlock) {
+                return false;
+              }
+              if (topicHash && (!log.topics || !log.topics.includes(topicHash))) {
+                return false;
+              }
+              return true;
+            });
+          };
+
+          const matchedTickets = filterLogs(rawTickets, "0xe644a03c3c564ec9e825adadd36c476e0a10ba3e96ea01650aff1b553bbf34e3");
+          const matchedWinners = filterLogs(rawWinners, "0xa67547898330bfcb759cb0f460d13f13ce624befc285a30f961122f2a5badf20");
+
           if (filterTopics.length > 0) {
             const targetTopic = filterTopics[0];
             if (targetTopic === "0xe644a03c3c564ec9e825adadd36c476e0a10ba3e96ea01650aff1b553bbf34e3") {
-              return tickets;
+              return matchedTickets;
             }
             if (targetTopic === "0xa67547898330bfcb759cb0f460d13f13ce624befc285a30f961122f2a5badf20") {
-              return winners;
+              return matchedWinners;
             }
           }
-          return [...tickets, ...winners];
+          return [...matchedTickets, ...matchedWinners];
         }
         
         if (method === "eth_call") {
@@ -241,6 +310,50 @@ const setupMocks = async (targetPage) => {
           // Fallback padrão de zeros
           return "0x0000000000000000000000000000000000000000000000000000000000000000";
         }
+        if (method === "eth_estimateGas") {
+          return "0x7a120"; // 500k gas limit
+        }
+
+        if (method === "eth_gasPrice") {
+          return "0x4a817c800"; // 20 Gwei
+        }
+
+        if (method === "eth_maxPriorityFeePerGas") {
+          return "0x59682f00"; // 1.5 Gwei
+        }
+
+        if (method === "eth_sendTransaction") {
+          // Salva no sessionStorage o timestamp de envio da transação
+          sessionStorage.setItem("__mock_tx_sent_time", Date.now().toString());
+          // Retorna um hash hexadecimal de transação fictício gerado randomicamente
+          return "0x" + Array.from({length: 64}, () => Math.floor(Math.random()*16).toString(16)).join("");
+        }
+
+        if (method === "eth_getTransactionReceipt") {
+          const txSentTimeStr = sessionStorage.getItem("__mock_tx_sent_time");
+          if (txSentTimeStr) {
+            const txSentTime = parseInt(txSentTimeStr, 10);
+            // Simula um atraso de 3 segundos para que a transação apareça como pendente (processando...) antes de confirmar
+            if (Date.now() - txSentTime < 3000) {
+              return null;
+            }
+          }
+
+          const txHash = params ? params[0] : "0x0000000000000000000000000000000000000000000000000000000000000001";
+          return {
+            transactionHash: txHash,
+            transactionIndex: "0x1",
+            blockHash: "0x0000000000000000000000000000000000000000000000000000000000000002",
+            blockNumber: "0x29de000", // Mapeia com o bloco atual do blockNumber para confirmar imediatamente (1 block confirmation)
+            from: "0xc545124fa9704ba2ec880e3e5a141ebb6be98b41",
+            to: "0x10ed17d3F4AAD4043f34b9A9AD024c743f2Db46F",
+            cumulativeGasUsed: "0x120c8",
+            gasUsed: "0x120c8",
+            contractAddress: null,
+            logs: [],
+            status: "0x1" // Sucesso
+          };
+        }
         
         return null;
       },
@@ -254,14 +367,14 @@ const setupMocks = async (targetPage) => {
   });
 };
 
-Before(async () => {
+Before({ tags: "not @demo" }, async () => {
   browser = await chromium.launch({ headless: true });
   context = await browser.newContext({ locale: "en-US" });
   page = await context.newPage();
   await setupMocks(page);
 });
 
-After(async () => {
+After({ tags: "not @demo" }, async () => {
   await browser.close();
 });
 
@@ -403,7 +516,7 @@ Then("as atividades históricas reais do contrato devem estar carregadas na tela
   const blockLinkText = await blockLink.textContent();
   
   expect(blockLinkHref).to.include("basescan.org/block/");
-  expect(blockLinkText.toLowerCase()).to.include("block #");
+  expect(blockLinkText.toLowerCase()).to.match(/(block|bloco)\s*#/);
 });
 
 Then("o título dos logs {string} deve ser visível na página", async (expectedTitle) => {
@@ -496,3 +609,11 @@ Then("eu devo ser redirecionado para o deep link do MetaMask", async () => {
   const targetUrl = page.url();
   expect(targetUrl).to.include("metamask.app.link/dapp");
 });
+
+function setLocalPage(p, c, b) {
+  page = p;
+  context = c;
+  browser = b;
+}
+
+module.exports = { setupMocks, setLocalPage };

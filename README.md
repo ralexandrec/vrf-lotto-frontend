@@ -63,10 +63,29 @@ The output files will be built inside the `/dist` directory. Due to relative ass
 
 The repository includes behavior-driven E2E tests built on **Cucumber**, **Playwright**, and **Chai** to validate Web3 wallet states, Dynamic translations, and Smart Contract mock inputs.
 
-To run the test suite:
+To run the standard test suite:
 ```bash
-npx cucumber-js
+npm test
 ```
+
+---
+
+## 🎥 Video Demo Generation
+
+The project features an automated video recording suite to generate a high-fidelity video demonstration with synthetic audio narration, smooth cursor tracking, and simulated blockchain states.
+
+To generate the complete final video demo:
+1. Make sure the local development server is running in the background:
+   ```bash
+   npm run dev
+   ```
+2. Run the combined recording and merging script:
+   ```bash
+   npm run demo
+   ```
+3. The final compiled video will be saved at [demo/videos/demo_final.mp4](file:///.../ContratoApostasNovoFrontend/demo/videos/demo_final.mp4).
+
+For advanced custom audio synthesis and voice configurations, please check the [demo documentation](file:///Users/renatoalexandredacunha/Projetos/ContratoApostasNovoFrontend/demo/README.md).
 
 ---
 

@@ -3,5 +3,10 @@
     "paths": ["tests/features/**/*.feature"],
     "require": ["tests/step-definitions/**/*.steps.js", "tests/step-definitions/**/*.steps.cjs"],
     "publishQuiet": true
+  },
+  "demo": {
+    "paths": ["demo/demo_recording.feature"],
+    "require": ["demo/demo.steps.cjs", "tests/step-definitions/ui.steps.cjs"],
+    "publishQuiet": true
   }
 }
