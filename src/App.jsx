@@ -428,7 +428,7 @@ function App() {
             id: `${e.transactionHash}-winner`,
             text: t("log.event.winnerDrawn", { winner: `${vencedor.substring(0, 6)}...${vencedor.substring(38)}` }),
             type: "success",
-            meta: { address: vencedor, txHash: e.transactionHash },
+            meta: { address: vencedor, txHash: e.transactionHash, isVrf: true },
             scope: scope,
             blockNumber: Number(e.blockNumber)
           },
@@ -436,7 +436,7 @@ function App() {
             id: `${e.transactionHash}-prize`,
             text: t("log.event.winnerPrize", { prize: premio }),
             type: "success",
-            meta: { address: vencedor, txHash: e.transactionHash },
+            meta: { address: vencedor, txHash: e.transactionHash, isVrf: true },
             scope: scope,
             blockNumber: Number(e.blockNumber)
           }
@@ -531,7 +531,7 @@ function App() {
 
     contract.on("SorteioIniciado", (event) => {
       const txHash = event?.log?.transactionHash || "";
-      addLog(t("log.event.drawStarted"), "highlight", { txHash }, "global");
+      addLog(t("log.event.drawStarted"), "highlight", { txHash, isVrf: true }, "global");
       loadContractData();
     });
 
@@ -544,13 +544,13 @@ function App() {
       addLog(
         t("log.event.winnerDrawn", { winner: `${vencedor.substring(0, 6)}...${vencedor.substring(38)}` }),
         "success",
-        { address: vencedor, txHash },
+        { address: vencedor, txHash, isVrf: true },
         scope
       );
       addLog(
         t("log.event.winnerPrize", { prize: formattedPrize }),
         "success",
-        { address: vencedor, txHash },
+        { address: vencedor, txHash, isVrf: true },
         scope
       );
       
@@ -866,7 +866,7 @@ function App() {
                   </a>
                 )}
                 <span className={`log-text ${log.type}`}>{renderLogText(log)}</span>
-                {log.meta && log.meta.txHash && (
+                {log.meta && log.meta.txHash && log.meta.isVrf && (
                   <a 
                     href={getExplorerUrl(log.meta.txHash, "tx")}
                     target="_blank"
