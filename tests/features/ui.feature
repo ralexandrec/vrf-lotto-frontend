@@ -19,12 +19,17 @@ Feature: Interface do usuário do Lotchain
 
   Scenario: Validar visualização e alternância das abas de log
     Given que eu acesso a página inicial do Lotchain
-    Then as abas de log "Geral (Contrato)" e "Minhas Ações" devem estar visíveis
-    When eu clico na aba de log "Minhas Ações"
-    Then a aba "Minhas Ações" deve estar ativa
+    Then as abas de log "General (Contract)" e "My Activity" devem estar visíveis
+    When eu clico na aba de log "My Activity"
+    Then a aba "My Activity" deve estar ativa
 
   Scenario: Validar carregamento das atividades históricas reais do contrato
     Given que eu acesso a página inicial do Lotchain
     When eu clico no botão de conectar carteira
-    Then a aba "Geral (Contrato)" deve estar ativa
+    Then a aba "General (Contract)" deve estar ativa
     And as atividades históricas reais do contrato devem estar carregadas na tela
+
+  Scenario: Validar detecção automática de idioma para Português
+    Given que eu configuro o idioma do navegador para "pt-BR"
+    And que eu acesso a página inicial do Lotchain
+    Then o título dos logs "ATIVIDADES EM TEMPO REAL" deve ser visível na página

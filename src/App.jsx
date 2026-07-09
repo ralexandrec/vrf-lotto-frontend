@@ -855,7 +855,6 @@ function App() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="log-block-link"
-                    title={t("log.blockTooltip", { number: log.blockNumber })}
                   >
                     [{t("log.blockLabel", { number: log.blockNumber })}]
                   </a>

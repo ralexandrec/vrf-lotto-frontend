@@ -8,7 +8,7 @@ let page;
 
 Before(async () => {
   browser = await chromium.launch({ headless: true });
-  context = await browser.newContext();
+  context = await browser.newContext({ locale: "en-US" });
   page = await context.newPage();
   
   // Forward page console logs to terminal
@@ -18,6 +18,9 @@ Before(async () => {
 
   // Injetar Mock do window.ethereum antes de cada carregamento de página
   await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'language', { get: () => 'en-US', configurable: true });
+    Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'], configurable: true });
+
     window.ethereum = {
       isMetaMask: true,
       request: async (requestInfo) => {
@@ -260,6 +263,13 @@ After(async () => {
   await browser.close();
 });
 
+Given("que eu configuro o idioma do navegador para {string}", async (targetLocale) => {
+  await page.addInitScript((locale) => {
+    Object.defineProperty(navigator, 'language', { get: () => locale, configurable: true });
+    Object.defineProperty(navigator, 'languages', { get: () => [locale], configurable: true });
+  }, targetLocale);
+});
+
 Given("que eu acesso a página inicial do Lotchain", async () => {
   await page.goto("http://localhost:5173");
 });
@@ -330,20 +340,13 @@ Then("as abas de log {string} e {string} devem estar visíveis", async (tab1, ta
   const text1 = await page.locator("#log-tab-global").textContent();
   const text2 = await page.locator("#log-tab-user").textContent();
   
-  // Suporte flexível para PT e EN nos testes dependendo do locale do browser
-  const isPt = text1.includes("Geral") || text1.includes("Contrato");
-  if (isPt) {
-    expect(text1).to.include("Geral");
-    expect(text2).to.include("Minhas Ações");
-  } else {
-    expect(text1).to.include("General");
-    expect(text2).to.include("My Activity");
-  }
+  expect(text1).to.include(tab1);
+  expect(text2).to.include(tab2);
 });
 
 When("eu clico na aba de log {string}", async (tabName) => {
   const normalized = tabName.toLowerCase();
-  if (normalized.includes("ações") || normalized.includes("activity") || normalized.includes("minhas")) {
+  if (normalized.includes("activity") || normalized.includes("my")) {
     await page.locator("#log-tab-user").click();
   } else {
     await page.locator("#log-tab-global").click();
@@ -352,7 +355,7 @@ When("eu clico na aba de log {string}", async (tabName) => {
 
 Then("a aba {string} deve estar ativa", async (tabName) => {
   const normalized = tabName.toLowerCase();
-  const isUserTab = normalized.includes("ações") || normalized.includes("activity") || normalized.includes("minhas");
+  const isUserTab = normalized.includes("activity") || normalized.includes("my");
   const selector = isUserTab ? "#log-tab-user" : "#log-tab-global";
   const activeClass = await page.locator(selector).getAttribute("class");
   expect(activeClass).to.include("active");
@@ -376,9 +379,10 @@ Then("as atividades históricas reais do contrato devem estar carregadas na tela
   const blockLinkText = await blockLink.textContent();
   
   expect(blockLinkHref).to.include("basescan.org/block/");
-  
-  // Suporte flexível para PT ou EN no texto da tag de bloco do i18n
-  const isPt = blockLinkText.toLowerCase().includes("bloco");
-  const isEn = blockLinkText.toLowerCase().includes("block");
-  expect(isPt || isEn).to.be.true;
+  expect(blockLinkText.toLowerCase()).to.include("block #");
+});
+
+Then("o título dos logs {string} deve ser visível na página", async (expectedTitle) => {
+  const logsTitleText = await page.locator(".log-header h2").textContent();
+  expect(logsTitleText).to.include(expectedTitle);
 });
